@@ -1,3 +1,54 @@
+/*
+    My solution to Climbing Route Challenge from checkio.org    
+*/
+
+
+/*
+Description from Checkio:
+
+You have an elevation map and you want to know the shortest climbing route.
+
+The map is given as a list of strings.
+
+0 : plain ( elevation is 0)
+1-9 : hill (number is elevation)
+"mountain" is adjacent (only 4 directions) hill group.
+
+It consists of two or more hills.
+Isolated hill is not mountain.
+Start is top-left. Goal is bottom-right. You have to go over all the mountaintops. 
+You can only move vertical and horizontal. 
+And you can only move to the same or one elevation difference.
+You should look for the shortest route and return Number of steps. 
+(if mountains do not exist, You may go to the goal at the shortest from the start.)
+
+*/
+
+
+/*
+
+Conditions given by Checkio:
+ 
+Input: A elevation map as a list of strings.
+
+Output: number of steps as Integer.
+
+Precondition:
+elevation_map[0][0] == elevation_map[-1][-1] == '0'
+3 ≤ len(elevation_map)
+all(3 ≤ len(row) and len(row) == len(elevation_map[0]) for row in elevation__map)
+Each mountain has only one mountaintop.
+There is no mountain that can not climb.
+ 
+*/
+
+/*
+
+Find the minimum distance between top left corner all accessible peaks ending in the bottom row.
+Input is an array of string with numbers giving the elevation of the tile in the grid.
+Elevation difference > 1 is not walkable. 
+
+*/
 "use strict";
 
 function climbingRoute(elevation_map) {
@@ -106,33 +157,34 @@ function climbingRoute(elevation_map) {
     }
 
 
-    function peakFinder(peaks, arr) {
+    function peakFinder(peaks, elevations_arr) {
         let neighbourRow, neighbourCol;
-        for (let row = 0; row < arr.length; row++) {
-            for (let col = 0; col < arr[0].length; col++) {
-                let slopeDownCount = 4;
-                let slopeDownLargerThan1 = 4;
-                let currentTile = arr[row][col];
+        for (let row = 0; row < elevations_arr.length; row++) {
+            for (let col = 0; col < elevations_arr[0].length; col++) {
+                let slopeDownCount = 4; // Precondition is that there are no more than 1 true peak. Therefore all neighbouring slopes must be downward.
+                let slopeDownLargerThan1 = 4; // peak not accessible if slopeDownLargerThan1 = 4
+                let currentTile = elevations_arr[row][col];
 
                 for (let neighbour_i in neighbours) {
                     neighbourRow = row + neighbours[neighbour_i][0];
                     neighbourCol = col + neighbours[neighbour_i][1];
-                    if (neighbourRow < 0 || neighbourRow >= arr.length || neighbourCol < 0 || neighbourCol >= arr[0].length) {
+                    if (neighbourRow < 0 || neighbourRow >= elevations_arr.length || 
+                        neighbourCol < 0 || neighbourCol >= elevations_arr[0].length) {
                         if (currentTile >= 2) slopeDownCount--; //near edge
                         slopeDownLargerThan1--;
                         continue;
                     }
 
-                    if (currentTile >= 2 && (currentTile > arr[neighbourRow][neighbourCol])) {
+                    if (currentTile >= 2 && (currentTile > elevations_arr[neighbourRow][neighbourCol])) {
                         slopeDownCount--; // peak finder
-                        if ((currentTile - arr[neighbourRow][neighbourCol]) > 1) slopeDownLargerThan1--;
+                        if ((currentTile - elevations_arr[neighbourRow][neighbourCol]) > 1) slopeDownLargerThan1--;
                     }
 
 
                 }
                 if (slopeDownCount <= 0 && slopeDownLargerThan1 > 0) { // peak finder
 
-                    if (isTrueTop(arr, arr[row][col], row, col)) peaks.set(row + "," + col, [row, col]);
+                    if (isTrueTop(elevations_arr, elevations_arr[row][col], row, col)) peaks.set(row + "," + col, [row, col]);
 
                 }
             }
@@ -145,36 +197,37 @@ function climbingRoute(elevation_map) {
         height peak is found on the current mountain.
         */
 
-        function isTrueTop(arrM, maxHeight, rP, cP) {
+        function isTrueTop(elevations_arr, maxHeight, rowPeak, colPeak) {
             var directions = [[-1, 0], [0, 1], [1, 0], [0, -1]]; // 0: up 1: left  2: down  3: right
             var abortR = false;
 
-            var visited = arrM.map(x => x.slice());
-            var safety = 999;
+            var visited = elevations_arr.map(x => x.slice());
+            var safety = 999; // Prevents infinite loop in case there is no route.
 
-            startScoutingAnt(rP, cP);
+            startScoutingAnt(rowPeak, colPeak);
 
 
-            function startScoutingAnt(rP, cP) {
-                visited[rP][cP] = "V";
-                scoutingAnt(0, rP, cP);
-                scoutingAnt(1, rP, cP);
-                scoutingAnt(2, rP, cP);
-                scoutingAnt(3, rP, cP);
+            function startScoutingAnt(rowPeak, colPeak) {
+                visited[rowPeak][colPeak] = "V";
+                scoutingAnt(0, rowPeak, colPeak);
+                scoutingAnt(1, rowPeak, colPeak);
+                scoutingAnt(2, rowPeak, colPeak);
+                scoutingAnt(3, rowPeak, colPeak);
             }
 
-            function scoutingAnt(dir, rP, cP) {
+            function scoutingAnt(dir, rowPeak, colPeak) {
 
                 safety--;
 
                 if (!abortR && safety >= 0) {
 
-                    let rCurrentPos = rP + directions[dir][0];
-                    let cCurrentPos = cP + directions[dir][1];
+                    let rCurrentPos = rowPeak + directions[dir][0];
+                    let cCurrentPos = colPeak + directions[dir][1];
 
-                    if (rCurrentPos >= 0 && cCurrentPos >= 0 && rCurrentPos < arrM.length && cCurrentPos < arrM[0].length) {
+                    if (rCurrentPos >= 0 && cCurrentPos >= 0 && rCurrentPos <
+                         elevations_arr.length && cCurrentPos < elevations_arr[0].length) {
 
-                        let currentElev = arrM[rCurrentPos][cCurrentPos];
+                        let currentElev = elevations_arr[rCurrentPos][cCurrentPos];
                         let tileVisited = visited[rCurrentPos][cCurrentPos];
 
                         if (currentElev >= maxHeight && tileVisited != "V") {
@@ -211,7 +264,7 @@ function climbingRoute(elevation_map) {
         Brute force implementation of traveling salesman problem.
         Generates permutations of all the peaks. Adds up the distances,
         then returns the mimimum distance
-    */    
+    */
     function bruteForceTravelingSalesman(distArr) {
 
         var startVertex = 1;
@@ -279,6 +332,8 @@ function climbingRoute(elevation_map) {
 }
 
 
+
+
 var assert = require('assert');
 
 if (!global.is_checking) {
@@ -322,6 +377,6 @@ if (!global.is_checking) {
         '11100000000000000',
         '12100000000000000',
         '11100000000000000']), 52, 'pyramids')
-    console.log("Coding complete? Click 'Check' to review your tests and earn cool rewards!");
+    console.log("All checks passed!");
 }
 
