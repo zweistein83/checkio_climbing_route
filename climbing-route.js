@@ -1,5 +1,6 @@
 /*
     My solution to Climbing Route Challenge from checkio.org    
+    https://js.checkio.org/en/mission/old-climbing-route/
 */
 
 
@@ -162,7 +163,7 @@ function climbingRoute(elevation_map) {
         for (let row = 0; row < elevations_arr.length; row++) {
             for (let col = 0; col < elevations_arr[0].length; col++) {
                 let slopeDownCount = 4; // Precondition is that there are no more than 1 true peak. Therefore all neighbouring slopes must be downward.
-                let slopeDownLargerThan1 = 4; // peak not accessible if slopeDownLargerThan1 = 4
+                let slopeDownLargerThan1 = 4; // peak not accessible if slopeDownLargerThan1 = 0
                 let currentTile = elevations_arr[row][col];
 
                 for (let neighbour_i in neighbours) {
@@ -182,7 +183,7 @@ function climbingRoute(elevation_map) {
 
 
                 }
-                if (slopeDownCount <= 0 && slopeDownLargerThan1 > 0) { // peak finder
+                if (slopeDownCount <= 0 && slopeDownLargerThan1 > 0) { // if slopeDownLargerThan1 == 0 then there are no walkable slopes.
 
                     if (isTrueTop(elevations_arr, elevations_arr[row][col], row, col)) peaks.set(row + "," + col, [row, col]);
 
